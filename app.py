@@ -1,29 +1,44 @@
 from chalice import Chalice
-
 app = Chalice(app_name='abc')
 
+import pyrebase
+config = {
+    "apiKey": "AIzaSyCG38skIDWCTkNlXWr5qIXzSb7NS0HyjRI",
+    "authDomain": "delete-this-1329.firebaseapp.com",
+    "databaseURL": "https://delete-this-1329.firebaseio.com",
+    "storageBucket": "delete-this-1329.appspot.com",
+}
+firebase = pyrebase.initialize_app(config).database()
 
-@app.route('/')
-def index():
-    return {'hello': 'world'}
 
+@app.route('/webhook', methods=['POST'])
+def myFunction():
+    # This is the JSON body which is sent in POST request.
+    jsonBody = app.current_request.json_body
 
-# The view function above will return {"hello": "world"}
-# whenever you make an HTTP GET request to '/'.
-#
-# Here are a few more examples:
-#
-# @app.route('/hello/{name}')
-# def hello_name(name):
-#    # '/hello/james' -> {"hello": "james"}
-#    return {'hello': name}
-#
-# @app.route('/users', methods=['POST'])
-# def create_user():
-#     # This is the JSON body the user sent in their POST request.
-#     user_as_json = app.current_request.json_body
-#     # We'll echo the json body back to the user in a 'user' key.
-#     return {'user': user_as_json}
-#
-# See the README documentation for more examples.
-#
+    if jsonBody.get('result').get('action') == 'wellcome':
+        print('wellcome action detected')
+
+        return {"speech": "Wellcome to the bot, say book hotel to book it any time"}
+
+    elif jsonBody.get('result').get('action') == 'bookHotel':
+        print('hotel booking action detected')
+        
+        users = firebase.child("users").get()
+        print(users.val())
+
+        data = {
+            "name": jsonBody.get('result').get('parameters').get('number'),
+            "color": jsonBody.get('result').get('parameters').get('color')
+        }
+        print("dictionary made ", data)
+
+        results = firebase.child("users").push(data)
+        print("result: ")
+        print(results)
+
+        return{"speech": " hotel booking done"}
+
+    else:
+        print('No Action detected')
+        return{"speech": "No Action Detected"}
