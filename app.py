@@ -1,14 +1,26 @@
 from chalice import Chalice
+import requests
+
 app = Chalice(app_name='abc')
 
-import pyrebase
-config = {
-    "apiKey": "AIzaSyCG38skIDWCTkNlXWr5qIXzSb7NS0HyjRI",
-    "authDomain": "delete-this-1329.firebaseapp.com",
-    "databaseURL": "https://delete-this-1329.firebaseio.com",
-    "storageBucket": "delete-this-1329.appspot.com",
-}
-firebase = pyrebase.initialize_app(config).database()
+r = requests.get('https://delete-this-1329.firebaseio.com/users.json')
+print("r.status_code: ", r.status_code)
+print("r.headers['content-type']: ", r.headers['content-type'])
+print("r.encoding: ", r.encoding)
+print("r.json(): ", r.json())
+
+for key in r.json():
+    print("key: ", key)
+    print("value: ", r.json()[key])
+
+@app.route('/hello', methods=['GET'])
+def abcfunc():
+    return {"message": "hello world"}
+
+
+@app.route('/', methods=['GET'])
+def abcfuncaa():
+    return {"message": "slash hello world"}
 
 
 @app.route('/webhook', methods=['POST'])
@@ -23,9 +35,6 @@ def myFunction():
 
     elif jsonBody.get('result').get('action') == 'bookHotel':
         print('hotel booking action detected')
-        
-        users = firebase.child("users").get()
-        print(users.val())
 
         data = {
             "name": jsonBody.get('result').get('parameters').get('number'),
@@ -33,10 +42,9 @@ def myFunction():
         }
         print("dictionary made ", data)
 
-        results = firebase.child("users").push(data)
-        print("result: ")
-        print(results)
-
+        result = requests.post('https://delete-this-1329.firebaseio.com/tests.json', data = data)
+        print("result: ", result)
+        
         return{"speech": " hotel booking done"}
 
     else:
